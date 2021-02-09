@@ -85,11 +85,38 @@
         "description": "Name of the virtual machine."
       }
     },
-    "virtualNetworkResourceGroup": {
+    "CostCenter": {
       "type": "string",
-      "defaultValue": "Infra-Network-RG",
+      "defaultValue": "PSPC-Infra",
       "metadata": {
-        "description": "Name of the virtual machine."
+        "description": "Cost Center"
+      }
+    },
+    "Environment": {
+      "type": "string",
+      "defaultValue": "Validation2",
+      "allowedValues": [
+        "Validation2",
+        "Sandbox",
+        "Dev",
+        "Prod"
+      ],
+      "metadata": {
+        "description": "Environment"
+      }
+    },
+    "Organizations": {
+      "type": "string",
+      "defaultValue": "PSPC-DSB-TSS-INP-IO",
+      "metadata": {
+        "description": "Organization"
+      }
+    },
+    "Owner": {
+      "type": "string",
+      "defaultValue": "TPSGC.dgsnsstoi-dsbtssio.PWGSC@tpsgc-pwgsc.gc.ca",
+      "metadata": {
+        "description": "Owner Email"
       }
     }
   },
@@ -99,7 +126,13 @@
     "nicName": "[concat(substring(subscription().displayName,0,4), '-', parameters('vmName'),'-nic1')]",
     "subnetName": "[concat(substring(subscription().displayName,0,4), '-', parameters('Subnet'))]",
     "VNetname": "[concat(substring(subscription().displayName,0,4), '-', parameters('VNet'))]",
-    "subnetRef": "[resourceId(variables('VNetRG'),'Microsoft.Network/virtualNetworks/subnets', variables('VNetname'), variables('Subnetname'))]"
+    "subnetRef": "[resourceId(variables('VNetRG'),'Microsoft.Network/virtualNetworks/subnets', variables('VNetname'), variables('Subnetname'))]",
+    "tags": {
+      "CostCenter": "[parameters('CostCenter')]",
+      "Environment": "[parameters('Environment')]",
+      "Organizations": "[parameters('Organizations')]",
+      "Owner": "[parameters('Owner')]"
+    }
   },
   "resources": [
     {
@@ -107,6 +140,7 @@
       "apiVersion": "2020-06-01",
       "name": "[variables('nicName')]",
       "location": "[parameters('location')]",
+      "tags":"[variables('tags')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -126,6 +160,7 @@
       "apiVersion": "2020-06-01",
       "name": "[variables('vmName')]",
       "location": "[parameters('location')]",
+      "tags":"[variables('tags')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
       ],
