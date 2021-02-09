@@ -85,6 +85,13 @@
         "description": "Name of the virtual machine."
       }
     },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "Infra-Network-RG",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
     "CostCenter": {
       "type": "string",
       "defaultValue": "PSPC-Infra",
