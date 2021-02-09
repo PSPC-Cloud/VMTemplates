@@ -88,13 +88,11 @@
   },
   "variables": {
     "storageAccountName": "[concat('bootdiags', uniquestring(resourceGroup().id))]",
-    "nicName": "myVMNic",
-    "addressPrefix": "10.0.0.0/16",
-    "subnetName": "Subnet",
-    "subnetPrefix": "10.0.0.0/24",
-    "virtualNetworkName": "MyVNET",
-    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-    "networkSecurityGroupName": "default-NSG"
+    "vmName": "[concat(substring(subscription().displayName,0,4), '-', parameters('vmName'))]",
+    "nicName": "[concat(substring(subscription().displayName,0,4), '-', parameters('vmName'),'-nic1')]",
+    "subnetName": "[concat(substring(subscription().displayName,0,4), '-', parameters('Subnet'))]",
+    "virtualNetworkName": "[concat(substring(subscription().displayName,0,4), '-', parameters('VNet'))]",
+    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('VNet'), variables('Subnet'))]"
   },
   "resources": [
     {
