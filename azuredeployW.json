@@ -1,0 +1,186 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "OSVersion": {
+      "type": "string",
+      "defaultValue": "2019-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Nano-Server",
+        "2016-Datacenter-with-Containers",
+        "2016-Datacenter",
+        "2019-Datacenter",
+        "2019-Datacenter-Core",
+        "2019-Datacenter-Core-smalldisk",
+        "2019-Datacenter-Core-with-Containers",
+        "2019-Datacenter-Core-with-Containers-smalldisk",
+        "2019-Datacenter-smalldisk",
+        "2019-Datacenter-with-Containers",
+        "2019-Datacenter-with-Containers-smalldisk"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "allowedValues": [
+        "Standard_B2s",
+        "Standard_B2ms",
+        "Standard_B4ms",
+        "Standard_B8ms"
+      ],
+      "metadata": {
+        "description": "Size of the virtual machine."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "canadacentral",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "defaultValue": "pspc-vm",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
+    "OSDisk": {
+      "type": "string",
+      "defaultValue": "60",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
+    "DataDisk": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
+    "VNet": {
+      "type": "string",
+      "defaultValue": "Client-Network-VNET",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
+    "Subnet": {
+      "type": "string",
+      "defaultValue": "APP",
+      "allowedValues": [
+        "APP",
+        "DB",
+        "PAZ"
+      ],
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat('bootdiags', uniquestring(resourceGroup().id))]",
+    "nicName": "myVMNic",
+    "addressPrefix": "10.0.0.0/16",
+    "subnetName": "Subnet",
+    "subnetPrefix": "10.0.0.0/24",
+    "virtualNetworkName": "MyVNET",
+    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+    "networkSecurityGroupName": "default-NSG"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('nicName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('vmName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "[parameters('OSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "StandardSSD_LRS"
+            }
+          },
+          "dataDisks": [
+            {
+              "diskSizeGB": 1023,
+              "lun": 0,
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "hostname": {
+      "type": "string",
+      "value": "[reference(parameters('publicIPName')).dnsSettings.fqdn]"
+    }
+  }
+}
