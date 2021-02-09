@@ -84,15 +84,22 @@
       "metadata": {
         "description": "Name of the virtual machine."
       }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "Infra-Network-RG",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
     }
   },
   "variables": {
-    "storageAccountName": "[concat('bootdiags', uniquestring(resourceGroup().id))]",
+    "VNetRG": "[concat(substring(subscription().displayName,0,4), '-', parameters('virtualNetworkResourceGroup'))]",
     "vmName": "[concat(substring(subscription().displayName,0,4), '-', parameters('vmName'))]",
     "nicName": "[concat(substring(subscription().displayName,0,4), '-', parameters('vmName'),'-nic1')]",
     "subnetName": "[concat(substring(subscription().displayName,0,4), '-', parameters('Subnet'))]",
     "VNetname": "[concat(substring(subscription().displayName,0,4), '-', parameters('VNet'))]",
-    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('VNetname'), variables('Subnetname'))]"
+    "subnetRef": "[resourceId(variables('VNetRG'),'Microsoft.Network/virtualNetworks/subnets', variables('VNetname'), variables('Subnetname'))]"
   },
   "resources": [
     {
